@@ -227,9 +227,14 @@ def render_announcement_with_reactions(base_text: str, reactions: dict) -> str:
 
 
 def render_group_text(ann: dict) -> str:
-    text = render_announcement_with_reactions(ann["base_text"], ann["reactions"])
     if ann.get("closed"):
-        text += "\n\nЗАКРЫТО"
+        base = f"<s>{ann['base_text']}</s>"
+        text = render_announcement_with_reactions(base, ann["reactions"])
+        text += "\n\n<b>ЗАКРЫТО</b>"
+    else:
+        text = render_announcement_with_reactions(
+            ann["base_text"], ann["reactions"]
+        )
     return text
 
 
@@ -252,10 +257,14 @@ def render_management_panel(ann: dict) -> str:
     if ann.get("closed"):
         header += " (ЗАКРЫТО)"
 
+    base = (
+        f"<s>{ann['base_text']}</s>" if ann.get("closed") else ann["base_text"]
+    )
+
     lines = [
         header,
         "",
-        ann["base_text"],
+        base,
         "",
         "Чтобы связаться с откликнувшимся — нажми на его @username в списке ниже.",
         "",
@@ -392,12 +401,12 @@ def build_announcement_text(data: dict) -> str:
     formatted_price = format_price(data["price"], data["goalie_count"])
 
     def label(word: str) -> str:
-        return f"<b><code>{word}</code></b>"
+        return f"<b>{word}</b>"
 
     event_type_upper = html.escape((data["event_type"] or "").upper())
 
     lines = [
-        f"<b><code>{event_type_upper}</code></b>",
+        f"<b>{event_type_upper}</b>",
         f"🏟 {label('Адрес')}: {html.escape(data['address'] or '')}",
         f"⏳ {label('Продолжительность')}: {html.escape(data['duration'] or '')}",
         f"🕰 {label('Начало')}: {html.escape(data['event_time'] or '')}",
